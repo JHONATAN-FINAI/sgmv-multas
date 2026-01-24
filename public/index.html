@@ -1,0 +1,2013 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGMV - Sistema de Gestão de Multas Veiculares</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #141416;
+            --bg-tertiary: #1c1c1f;
+            --border-color: #2a2a2d;
+            --text-primary: #f5f5f5;
+            --text-secondary: #a0a0a5;
+            --text-muted: #6c6c70;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --success-bg: rgba(34, 197, 94, 0.1);
+        }
+        
+        * { box-sizing: border-box; }
+        
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            margin: 0;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+        
+        /* Layout */
+        .app-container { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 1000;
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: var(--text-primary);
+        }
+        
+        .sidebar-logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        
+        .sidebar-nav { padding: 1rem 0; flex: 1; }
+        
+        .nav-section {
+            padding: 0.5rem 1.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .nav-section-title {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.65rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--accent-primary);
+            border-left-color: var(--accent-primary);
+        }
+        
+        .nav-item i { font-size: 1.1rem; width: 20px; text-align: center; }
+        
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-tertiary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+        }
+        
+        .user-name {
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 260px;
+            min-height: 100vh;
+        }
+        
+        .main-header {
+            padding: 1.25rem 2rem;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .header-actions { display: flex; gap: 0.75rem; align-items: center; }
+        
+        .main-body { padding: 2rem; }
+        
+        /* Buttons */
+        .btn-primary-custom {
+            background: var(--accent-primary);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .btn-primary-custom:hover {
+            background: var(--accent-hover);
+            color: white;
+        }
+        
+        .btn-secondary-custom {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .btn-secondary-custom:hover {
+            background: var(--border-color);
+            color: white;
+        }
+        
+        .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.85rem; }
+        
+        .btn-danger-custom {
+            background: var(--danger);
+            color: white;
+            border: none;
+        }
+        
+        .btn-danger-custom:hover { background: #dc2626; color: white; }
+        
+        /* Cards */
+        .card-custom {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .card-header-custom {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title-custom {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .card-body-custom { padding: 1.25rem; }
+        
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        
+        .stat-icon.blue { background: rgba(59, 130, 246, 0.15); color: var(--accent-primary); }
+        .stat-icon.green { background: var(--success-bg); color: var(--success); }
+        .stat-icon.yellow { background: var(--warning-bg); color: var(--warning); }
+        .stat-icon.red { background: var(--danger-bg); color: var(--danger); }
+        
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+        
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--danger); }
+        
+        /* Tables */
+        .table-custom {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table-custom th {
+            text-align: left;
+            padding: 0.85rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+        
+        .table-custom td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        
+        .table-custom tbody tr:hover { background: var(--bg-tertiary); }
+        
+        .table-custom tbody tr:last-child td { border-bottom: none; }
+        
+        /* Badges */
+        .badge-custom {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .badge-success { background: var(--success-bg); color: var(--success); }
+        .badge-warning { background: var(--warning-bg); color: var(--warning); }
+        .badge-danger { background: var(--danger-bg); color: var(--danger); }
+        .badge-info { background: rgba(59, 130, 246, 0.15); color: var(--accent-primary); }
+        .badge-purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+        .badge-secondary { background: var(--bg-tertiary); color: var(--text-secondary); }
+        
+        /* Forms */
+        .form-group { margin-bottom: 1rem; }
+        
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+            color: var(--text-secondary);
+        }
+        
+        .form-control-custom {
+            width: 100%;
+            padding: 0.6rem 0.85rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            font-family: inherit;
+            transition: border-color 0.15s ease;
+        }
+        
+        .form-control-custom:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .form-control-custom::placeholder { color: var(--text-muted); }
+        
+        select.form-control-custom {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%236c6c70' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2rem;
+        }
+        
+        /* Custom Checkbox */
+        .form-check-custom {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 12px 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .form-check-custom:hover {
+            border-color: var(--accent-color);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        .form-check-custom input[type="checkbox"] {
+            display: none;
+        }
+        .form-check-custom .checkmark {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        .form-check-custom input:checked + .checkmark {
+            background: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+        .form-check-custom input:checked + .checkmark::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .form-check-custom span:last-child {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+        
+        /* Modal */
+        .modal-custom .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+        
+        .modal-custom .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .modal-custom .modal-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .modal-custom .modal-body { padding: 1.5rem; }
+        
+        .modal-custom .modal-footer {
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 1.5rem;
+        }
+        
+        .modal-custom .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        
+        /* Alerts */
+        .alert-custom {
+            padding: 0.85rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+        
+        .alert-danger-custom {
+            background: var(--danger-bg);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+        
+        .alert-warning-custom {
+            background: var(--warning-bg);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+        
+        .alert-success-custom {
+            background: var(--success-bg);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+        
+        /* Tabs */
+        .tabs-custom {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        .tab-item {
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.15s ease;
+        }
+        
+        .tab-item:hover { color: var(--text-primary); }
+        
+        .tab-item.active {
+            color: var(--accent-primary);
+            border-bottom-color: var(--accent-primary);
+        }
+        
+        /* File Upload */
+        .file-upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .file-upload-zone:hover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+        
+        .file-upload-zone.dragover {
+            border-color: var(--accent-primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+        
+        .file-upload-icon {
+            font-size: 2.5rem;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+        
+        .file-upload-text { color: var(--text-secondary); font-size: 0.9rem; }
+        .file-upload-hint { color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem; }
+        
+        /* Prazo indicators */
+        .prazo-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        .prazo-vencido { background: var(--danger-bg); color: var(--danger); }
+        .prazo-critico { background: var(--warning-bg); color: var(--warning); }
+        .prazo-ok { background: var(--success-bg); color: var(--success); }
+        
+        /* Status de Indicação de Condutor */
+        .indicacao-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .indicacao-vencido {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            animation: pulse-danger 1.5s infinite;
+        }
+        .indicacao-hoje {
+            background: linear-gradient(135deg, #ea580c, #c2410c);
+            color: white;
+            animation: pulse-warning 1s infinite;
+        }
+        .indicacao-critico {
+            background: var(--danger-bg);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        .indicacao-alerta {
+            background: var(--warning-bg);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        .indicacao-ok {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        @keyframes pulse-danger {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.02); }
+        }
+        @keyframes pulse-warning {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state-icon {
+            font-size: 3rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+        
+        .empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            z-index: 9999;
+        }
+        
+        .toast-custom {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.85rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.5rem;
+            animation: slideIn 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        /* Page Views */
+        .page-view { display: none; }
+        .page-view.active { display: block; }
+        
+        /* Grid layout for forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .form-grid-2 { grid-template-columns: repeat(2, 1fr); }
+        .form-grid-3 { grid-template-columns: repeat(3, 1fr); }
+        
+        /* Action buttons in tables */
+        .action-btn {
+            width: 32px;
+            height: 32px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .action-btn:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .action-btn.danger:hover {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        
+        /* Responsive */
+        @media (max-width: 992px) {
+            .sidebar { transform: translateX(-100%); transition: transform 0.3s ease; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+            .form-grid-3 { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        @media (max-width: 576px) {
+            .form-grid, .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; }
+            .main-body { padding: 1rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+        }
+        
+        /* Hidden */
+        .hidden { display: none !important; }
+        
+        /* Link styling */
+        .link-custom {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+        
+        .link-custom:hover { text-decoration: underline; }
+        
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        
+        /* Ranking table */
+        .ranking-position {
+            width: 28px;
+            height: 28px;
+            background: var(--bg-tertiary);
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .ranking-position.gold { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+        .ranking-position.silver { background: rgba(156, 163, 175, 0.2); color: #9ca3af; }
+        .ranking-position.bronze { background: rgba(180, 83, 9, 0.2); color: #d97706; }
+        
+        /* Import preview table */
+        .import-preview {
+            max-height: 400px;
+            overflow: auto;
+        }
+        
+        .import-preview .table-custom td {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.75rem;
+        }
+        
+        .import-row-valid { border-left: 3px solid var(--success); }
+        .import-row-invalid { border-left: 3px solid var(--danger); background: var(--danger-bg); }
+        .import-row-duplicate { border-left: 3px solid var(--warning); background: var(--warning-bg); }
+    </style>
+</head>
+<body>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <div class="app-container">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <div class="sidebar-logo-icon">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    SGMV
+                </div>
+            </div>
+            
+            <div class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Principal</div>
+                </div>
+                <div class="nav-item active" data-page="dashboard">
+                    <i class="bi bi-grid-1x2"></i>
+                    Dashboard
+                </div>
+                <div class="nav-item" data-page="alertas">
+                    <i class="bi bi-bell-fill"></i>
+                    Alertas
+                    <span class="nav-badge" id="alertasBadge" style="margin-left:auto;background:var(--danger);color:white;font-size:0.65rem;padding:2px 6px;border-radius:10px;display:none;">0</span>
+                </div>
+                <div class="nav-item" data-page="multas">
+                    <i class="bi bi-file-earmark-text"></i>
+                    Multas
+                </div>
+                <div class="nav-item" data-page="veiculos">
+                    <i class="bi bi-truck"></i>
+                    Veículos
+                </div>
+                <div class="nav-item" data-page="condutores">
+                    <i class="bi bi-person-badge"></i>
+                    Condutores
+                </div>
+                <div class="nav-item" data-page="audiencias">
+                    <i class="bi bi-calendar-event"></i>
+                    Audiências
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Operações</div>
+                </div>
+                <div class="nav-item" data-page="importar">
+                    <i class="bi bi-cloud-upload"></i>
+                    Importar CSV
+                </div>
+                <div class="nav-item" data-page="relatorios">
+                    <i class="bi bi-bar-chart-line"></i>
+                    Relatórios
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Sistema</div>
+                </div>
+                <div class="nav-item" data-page="configuracoes">
+                    <i class="bi bi-gear"></i>
+                    Configurações
+                </div>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-info" id="userInfo">
+                    <div class="user-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <div>
+                        <div class="user-name" id="userName">Carregando...</div>
+                        <div class="user-email" id="userEmail">...</div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Login Page -->
+            <div class="page-view active" id="loginPage" style="display: flex; align-items: center; justify-content: center; min-height: 100vh;">
+                <div class="card-custom" style="width: 100%; max-width: 400px;">
+                    <div class="card-body-custom" style="padding: 2rem;">
+                        <div style="text-align: center; margin-bottom: 2rem;">
+                            <div class="sidebar-logo" style="justify-content: center; margin-bottom: 0.5rem;">
+                                <div class="sidebar-logo-icon">
+                                    <i class="bi bi-shield-check"></i>
+                                </div>
+                                SGMV
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Sistema de Gestão de Multas Veiculares</p>
+                        </div>
+                        
+                        <form id="loginForm">
+                            <div class="form-group">
+                                <label class="form-label">E-mail</label>
+                                <input type="email" class="form-control-custom" id="loginEmail" required placeholder="seu@email.com">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Senha</label>
+                                <input type="password" class="form-control-custom" id="loginPassword" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn-primary-custom" style="width: 100%; justify-content: center; margin-top: 1rem;">
+                                <i class="bi bi-box-arrow-in-right"></i>
+                                Entrar
+                            </button>
+                        </form>
+                        
+                        <div style="text-align: center; margin-top: 1.5rem;">
+                            <a href="#" class="link-custom" onclick="showRegister()">Criar conta com esses dados</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Dashboard -->
+            <div class="page-view" id="dashboardPage">
+                <div class="main-header">
+                    <h1 class="page-title">Dashboard</h1>
+                    <div class="header-actions">
+                        <button class="btn-secondary-custom" onclick="exportarRelatorio()">
+                            <i class="bi bi-download"></i>
+                            Exportar
+                        </button>
+                        <button class="btn-primary-custom" onclick="showModal('modalNovaMulta')">
+                            <i class="bi bi-plus-lg"></i>
+                            Nova Multa
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main-body">
+                    <!-- Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Total de Multas</span>
+                                <div class="stat-icon blue">
+                                    <i class="bi bi-file-earmark-text"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="statTotal">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Em Aberto</span>
+                                <div class="stat-icon yellow">
+                                    <i class="bi bi-clock-history"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="statAberto">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Prazos Críticos</span>
+                                <div class="stat-icon red">
+                                    <i class="bi bi-exclamation-triangle"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="statCriticos">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-header">
+                                <span class="stat-label">Valor Total (R$)</span>
+                                <div class="stat-icon green">
+                                    <i class="bi bi-currency-dollar"></i>
+                                </div>
+                            </div>
+                            <div class="stat-value" id="statValor">0,00</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Row -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">Multas por Mês</h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="chart-container">
+                                        <canvas id="chartMultasMes"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">Por Status</h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="chart-container">
+                                        <canvas id="chartStatus"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Multas Críticas -->
+                    <div class="card-custom mb-4">
+                        <div class="card-header-custom">
+                            <h3 class="card-title-custom">
+                                <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                                Multas com Prazos Críticos
+                            </h3>
+                        </div>
+                        <div class="card-body-custom p-0">
+                            <div class="table-responsive">
+                                <table class="table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>AIT</th>
+                                            <th>Placa</th>
+                                            <th>Tipo</th>
+                                            <th>Prazo</th>
+                                            <th>Dias Restantes</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaCriticos">
+                                        <tr>
+                                            <td colspan="7">
+                                                <div class="empty-state">
+                                                    <div class="loading-spinner"></div>
+                                                    <p style="margin-top: 0.5rem;">Carregando...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Multas Page -->
+            <div class="page-view" id="multasPage">
+                <div class="main-header">
+                    <h1 class="page-title">Multas</h1>
+                    <div class="header-actions">
+                        <button class="btn-secondary-custom" onclick="exportarMultasCSV()">
+                            <i class="bi bi-download"></i>
+                            Exportar CSV
+                        </button>
+                        <button class="btn-primary-custom" onclick="showModal('modalNovaMulta')">
+                            <i class="bi bi-plus-lg"></i>
+                            Nova Multa
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main-body">
+                    <!-- Filtros -->
+                    <div class="card-custom mb-4">
+                        <div class="card-body-custom">
+                            <div class="form-grid" style="grid-template-columns: repeat(5, 1fr);">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Buscar</label>
+                                    <input type="text" class="form-control-custom" id="filtroTexto" placeholder="AIT, placa, condutor...">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Tipo</label>
+                                    <select class="form-control-custom" id="filtroTipo">
+                                        <option value="">Todos</option>
+                                        <option value="AUTUACAO">Autuação</option>
+                                        <option value="PENALIDADE">Penalidade</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control-custom" id="filtroStatus">
+                                        <option value="">Todos</option>
+                                        <option value="EM_ABERTO">Em Aberto</option>
+                                        <option value="RECURSO_EM_JULGAMENTO">Recurso em Julgamento</option>
+                                        <option value="RECURSO_DEFERIDO">Recurso Deferido</option>
+                                        <option value="RECURSO_INDEFERIDO">Recurso Indeferido</option>
+                                        <option value="ADVERTENCIA">Convertida em Advertência</option>
+                                        <option value="PAGO">Pago</option>
+                                        <option value="CANCELADO">Cancelado</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Secretaria</label>
+                                    <select class="form-control-custom" id="filtroSecretaria">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn-secondary-custom" style="width: 100%;" onclick="filtrarMultas()">
+                                        <i class="bi bi-search"></i>
+                                        Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabela de Multas -->
+                    <div class="card-custom">
+                        <div class="card-body-custom p-0">
+                            <div class="table-responsive">
+                                <table class="table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>AIT</th>
+                                            <th>Tipo</th>
+                                            <th>Placa</th>
+                                            <th>Secretaria</th>
+                                            <th>Condutor</th>
+                                            <th>Data Infração</th>
+                                            <th>Valor</th>
+                                            <th>Indicação Condutor</th>
+                                            <th>Prazo Recurso</th>
+                                            <th>Status</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaMultas">
+                                        <tr>
+                                            <td colspan="10">
+                                                <div class="empty-state">
+                                                    <div class="loading-spinner"></div>
+                                                    <p style="margin-top: 0.5rem;">Carregando...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Veículos Page -->
+            <div class="page-view" id="veiculosPage">
+                <div class="main-header">
+                    <h1 class="page-title">Veículos</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary-custom" onclick="showModal('modalNovoVeiculo')">
+                            <i class="bi bi-plus-lg"></i>
+                            Novo Veículo
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="main-body">
+                    <!-- Filtros -->
+                    <div class="card-custom mb-4">
+                        <div class="card-body-custom">
+                            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Buscar</label>
+                                    <input type="text" class="form-control-custom" id="filtroVeiculoTexto" placeholder="Placa, modelo...">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Secretaria</label>
+                                    <select class="form-control-custom" id="filtroVeiculoSecretaria">
+                                        <option value="">Todas</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control-custom" id="filtroVeiculoStatus">
+                                        <option value="">Todos</option>
+                                        <option value="true">Ativo</option>
+                                        <option value="false">Inativo</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn-secondary-custom" style="width: 100%;" onclick="filtrarVeiculos()">
+                                        <i class="bi bi-search"></i>
+                                        Filtrar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tabela -->
+                    <div class="card-custom">
+                        <div class="card-body-custom p-0">
+                            <div class="table-responsive">
+                                <table class="table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>Placa</th>
+                                            <th>Modelo</th>
+                                            <th>Secretaria</th>
+                                            <th>Status</th>
+                                            <th>Multas</th>
+                                            <th>Ações</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaVeiculos">
+                                        <tr>
+                                            <td colspan="6">
+                                                <div class="empty-state">
+                                                    <div class="loading-spinner"></div>
+                                                    <p style="margin-top: 0.5rem;">Carregando...</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Importar Page -->
+            <div class="page-view" id="importarPage">
+                <div class="main-header">
+                    <h1 class="page-title">Importar CSV</h1>
+                </div>
+                
+                <div class="main-body">
+                    <div class="card-custom mb-4">
+                        <div class="card-body-custom">
+                            <div class="file-upload-zone" id="uploadZone" onclick="document.getElementById('csvFile').click()">
+                                <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+                                <div class="file-upload-icon">
+                                    <i class="bi bi-cloud-arrow-up"></i>
+                                </div>
+                                <div class="file-upload-text">Arraste o arquivo CSV ou clique para selecionar</div>
+                                <div class="file-upload-hint">Formato esperado: AIT, tipo, órgão, placa, condutor, datas, valor, status</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Preview -->
+                    <div class="card-custom hidden" id="importPreviewCard">
+                        <div class="card-header-custom">
+                            <h3 class="card-title-custom">Preview da Importação</h3>
+                            <div>
+                                <span class="badge-custom badge-success me-2" id="importValidCount">0 válidos</span>
+                                <span class="badge-custom badge-danger" id="importInvalidCount">0 inválidos</span>
+                            </div>
+                        </div>
+                        <div class="card-body-custom p-0">
+                            <div class="import-preview">
+                                <table class="table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Status</th>
+                                            <th>AIT</th>
+                                            <th>Tipo</th>
+                                            <th>Placa</th>
+                                            <th>Condutor</th>
+                                            <th>Data Infração</th>
+                                            <th>Valor</th>
+                                            <th>Erro</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="importPreviewBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="card-body-custom" style="border-top: 1px solid var(--border-color);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <span style="color: var(--text-secondary);">Apenas linhas válidas serão importadas</span>
+                                </div>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <button class="btn-secondary-custom" onclick="cancelarImportacao()">Cancelar</button>
+                                    <button class="btn-primary-custom" onclick="confirmarImportacao()" id="btnConfirmarImport">
+                                        <i class="bi bi-check-lg"></i>
+                                        Confirmar Importação
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Log de Importações -->
+                    <div class="card-custom mt-4">
+                        <div class="card-header-custom">
+                            <h3 class="card-title-custom">Histórico de Importações</h3>
+                        </div>
+                        <div class="card-body-custom p-0">
+                            <div class="table-responsive">
+                                <table class="table-custom">
+                                    <thead>
+                                        <tr>
+                                            <th>Data</th>
+                                            <th>Usuário</th>
+                                            <th>Importados</th>
+                                            <th>Rejeitados</th>
+                                            <th>Arquivo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tabelaImportLogs">
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="empty-state">
+                                                    <p>Nenhuma importação realizada</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Relatórios Page -->
+            <div class="page-view" id="relatoriosPage">
+                <div class="main-header">
+                    <h1 class="page-title">Relatórios</h1>
+                </div>
+                
+                <div class="main-body">
+                    <!-- Filtros -->
+                    <div class="card-custom mb-4">
+                        <div class="card-body-custom">
+                            <div class="form-grid" style="grid-template-columns: repeat(4, 1fr);">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Data Início</label>
+                                    <input type="date" class="form-control-custom" id="relDataInicio">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Data Fim</label>
+                                    <input type="date" class="form-control-custom" id="relDataFim">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Tipo</label>
+                                    <select class="form-control-custom" id="relTipo">
+                                        <option value="">Todos</option>
+                                        <option value="AUTUACAO">Autuação</option>
+                                        <option value="PENALIDADE">Penalidade</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">&nbsp;</label>
+                                    <button class="btn-primary-custom" style="width: 100%;" onclick="gerarRelatorios()">
+                                        <i class="bi bi-arrow-repeat"></i>
+                                        Atualizar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Rankings -->
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">
+                                        <i class="bi bi-building me-2"></i>
+                                        Ranking por Secretaria
+                                    </h3>
+                                </div>
+                                <div class="card-body-custom p-0">
+                                    <div class="table-responsive">
+                                        <table class="table-custom">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Secretaria</th>
+                                                    <th>Total</th>
+                                                    <th>Em Aberto</th>
+                                                    <th>Valor Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingSecretarias"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">
+                                        <i class="bi bi-person me-2"></i>
+                                        Ranking por Condutor
+                                    </h3>
+                                </div>
+                                <div class="card-body-custom p-0">
+                                    <div class="table-responsive">
+                                        <table class="table-custom">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Condutor</th>
+                                                    <th>Total</th>
+                                                    <th>Reincidências</th>
+                                                    <th>Valor Total</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="rankingCondutores"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gráficos -->
+                    <div class="row g-4 mt-2">
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">Multas por Secretaria</h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="chart-container">
+                                        <canvas id="chartSecretarias"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">Valor por Secretaria</h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="chart-container">
+                                        <canvas id="chartValorSecretarias"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alertas Page -->
+            <div class="page-view" id="alertasPage">
+                <div class="main-header">
+                    <h1 class="page-title">Painel de Alertas</h1>
+                </div>
+                <div class="main-body">
+                    <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+                        <div class="stat-card" style="border-left: 3px solid var(--danger);">
+                            <div class="stat-value" id="alertVencidas" style="color: var(--danger);">0</div>
+                            <div class="stat-label">Vencidas</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 3px solid var(--warning);">
+                            <div class="stat-value" id="alertHoje" style="color: var(--warning);">0</div>
+                            <div class="stat-label">Vencem Hoje</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 3px solid var(--accent-primary);">
+                            <div class="stat-value" id="alertSemana" style="color: var(--accent-primary);">0</div>
+                            <div class="stat-label">Próximos 7 Dias</div>
+                        </div>
+                        <div class="stat-card" style="border-left: 3px solid #a855f7;">
+                            <div class="stat-value" id="alertIndicacao" style="color: #a855f7;">0</div>
+                            <div class="stat-label">Indicações Pendentes</div>
+                        </div>
+                    </div>
+                    <div class="tabs-custom mb-3" style="display:inline-flex;gap:0.25rem;padding:0.25rem;background:var(--bg-tertiary);border-radius:8px;">
+                        <button class="tab-item active" data-tab="vencidas" style="padding:0.5rem 1rem;border-radius:6px;font-size:0.8rem;border:none;background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;">Vencidas</button>
+                        <button class="tab-item" data-tab="criticas" style="padding:0.5rem 1rem;border-radius:6px;font-size:0.8rem;border:none;background:none;color:var(--text-muted);cursor:pointer;">Críticas</button>
+                        <button class="tab-item" data-tab="indicacoes" style="padding:0.5rem 1rem;border-radius:6px;font-size:0.8rem;border:none;background:none;color:var(--text-muted);cursor:pointer;">Indicações</button>
+                        <button class="tab-item" data-tab="todas" style="padding:0.5rem 1rem;border-radius:6px;font-size:0.8rem;border:none;background:none;color:var(--text-muted);cursor:pointer;">Todas</button>
+                    </div>
+                    <div class="card-custom">
+                        <div class="table-container" style="border:none;">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Urgência</th>
+                                        <th>AIT</th>
+                                        <th>Placa</th>
+                                        <th>Secretaria</th>
+                                        <th>Tipo Prazo</th>
+                                        <th>Data Prazo</th>
+                                        <th>Dias</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaAlertas"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Condutores Page -->
+            <div class="page-view" id="condutoresPage">
+                <div class="main-header">
+                    <h1 class="page-title">Condutores</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary-custom" onclick="abrirNovoCondutor()">
+                            <i class="bi bi-plus-lg"></i> Novo Condutor
+                        </button>
+                    </div>
+                </div>
+                <div class="main-body">
+                    <div class="card-custom">
+                        <div class="table-container" style="border:none;">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Nome</th>
+                                        <th>CPF</th>
+                                        <th>CNH</th>
+                                        <th>Validade CNH</th>
+                                        <th>Secretaria</th>
+                                        <th>Multas</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaCondutores"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Audiências Page -->
+            <div class="page-view" id="audienciasPage">
+                <div class="main-header">
+                    <h1 class="page-title">Audiências</h1>
+                    <div class="header-actions">
+                        <button class="btn-primary-custom" onclick="abrirNovaAudiencia()">
+                            <i class="bi bi-plus-lg"></i> Nova Audiência
+                        </button>
+                    </div>
+                </div>
+                <div class="main-body">
+                    <div class="card-custom">
+                        <div class="card-header-custom">
+                            <h3 class="card-title-custom"><i class="bi bi-calendar3"></i> Próximas Audiências</h3>
+                        </div>
+                        <div class="table-container" style="border:none;border-radius:0;">
+                            <table class="table-custom">
+                                <thead>
+                                    <tr>
+                                        <th>Data</th>
+                                        <th>Horário</th>
+                                        <th>Órgão</th>
+                                        <th>Multa (AIT)</th>
+                                        <th>Placa</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tabelaAudiencias"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Configurações Page -->
+            <div class="page-view" id="configuracoesPage">
+                <div class="main-header">
+                    <h1 class="page-title">Configurações</h1>
+                </div>
+                
+                <div class="main-body">
+                    <div class="row g-4">
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">
+                                        <i class="bi bi-bell me-2"></i>
+                                        Alertas de Prazos
+                                    </h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label class="form-label">Dias de antecedência para alertas</label>
+                                        <input type="text" class="form-control-custom" id="configDiasAlerta" placeholder="10, 5, 3" value="10, 5, 3">
+                                        <small style="color: var(--text-muted);">Separados por vírgula</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">E-mails para notificação</label>
+                                        <textarea class="form-control-custom" id="configEmails" rows="3" placeholder="email1@exemplo.com&#10;email2@exemplo.com"></textarea>
+                                        <small style="color: var(--text-muted);">Um e-mail por linha</small>
+                                    </div>
+                                    <button class="btn-primary-custom" onclick="salvarConfiguracoes()">
+                                        <i class="bi bi-check-lg"></i>
+                                        Salvar Configurações
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-lg-6">
+                            <div class="card-custom">
+                                <div class="card-header-custom">
+                                    <h3 class="card-title-custom">
+                                        <i class="bi bi-person-circle me-2"></i>
+                                        Conta
+                                    </h3>
+                                </div>
+                                <div class="card-body-custom">
+                                    <div class="form-group">
+                                        <label class="form-label">E-mail</label>
+                                        <input type="email" class="form-control-custom" id="configUserEmail" disabled>
+                                    </div>
+                                    <button class="btn-secondary-custom" onclick="logout()">
+                                        <i class="bi bi-box-arrow-right"></i>
+                                        Sair
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal Nova Multa -->
+    <div class="modal fade modal-custom" id="modalNovaMulta" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalMultaTitle">Nova Multa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formMulta">
+                        <input type="hidden" id="multaId">
+                        
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Tipo *</label>
+                                <select class="form-control-custom" id="multaTipo" required onchange="atualizarCamposPrazo()">
+                                    <option value="">Selecione...</option>
+                                    <option value="AUTUACAO">Autuação</option>
+                                    <option value="PENALIDADE">Penalidade</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Número AIT *</label>
+                                <input type="text" class="form-control-custom" id="multaAIT" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid form-grid-3 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Placa *</label>
+                                <input type="text" class="form-control-custom" id="multaPlaca" required oninput="buscarVeiculo(this.value)" style="text-transform: uppercase;">
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Modelo</label>
+                                <input type="text" class="form-control-custom" id="multaModelo" readonly>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Secretaria</label>
+                                <input type="text" class="form-control-custom" id="multaSecretaria" readonly>
+                            </div>
+                        </div>
+                        
+                        <div id="alertaVeiculoNaoEncontrado" class="alert-custom alert-warning-custom hidden mb-3">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            <div>
+                                Veículo não encontrado. 
+                                <a href="#" class="link-custom" onclick="cadastrarVeiculoRapido()">Cadastrar veículo</a>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Órgão Autuador *</label>
+                                <input type="text" class="form-control-custom" id="multaOrgao" required>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Condutor Infrator</label>
+                                <input type="text" class="form-control-custom" id="multaCondutor">
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid form-grid-3 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Data/Hora Infração *</label>
+                                <input type="datetime-local" class="form-control-custom" id="multaDataInfracao" required>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Data Expedição</label>
+                                <input type="date" class="form-control-custom" id="multaDataExpedicao">
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Data Protocolo/Entrega</label>
+                                <input type="date" class="form-control-custom" id="multaDataProtocolo" onchange="verificarPrazoProtocolo()">
+                            </div>
+                        </div>
+                        
+                        <div id="alertaProtocoloAposPrazo" class="alert-custom alert-danger-custom hidden mb-3">
+                            <i class="bi bi-exclamation-octagon"></i>
+                            <div>
+                                <strong>Atenção:</strong> Protocolo realizado após o prazo legal. Avaliar cabimento de novo recurso administrativo.
+                            </div>
+                        </div>
+                        
+                        <!-- Campos de prazo dinâmicos -->
+                        <div id="camposPrazoAutuacao" class="hidden">
+                            <div class="form-grid form-grid-2 mb-3">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Prazo Defesa Prévia</label>
+                                    <input type="date" class="form-control-custom" id="multaPrazoDefesa">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Prazo Indicação Condutor</label>
+                                    <input type="date" class="form-control-custom" id="multaPrazoIndicacao">
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label class="form-check-custom">
+                                    <input type="checkbox" id="multaCondutorIndicado">
+                                    <span class="checkmark"></span>
+                                    <span>Condutor já foi indicado ao órgão autuador</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div id="camposPrazoPenalidade" class="hidden">
+                            <div class="form-grid form-grid-2 mb-3">
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Prazo Recurso JARI</label>
+                                    <input type="date" class="form-control-custom" id="multaPrazoJARI">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label class="form-label">Prazo Pagamento</label>
+                                    <input type="date" class="form-control-custom" id="multaPrazoPagamento">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Valor (R$) *</label>
+                                <input type="number" step="0.01" class="form-control-custom" id="multaValor" required>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Status *</label>
+                                <select class="form-control-custom" id="multaStatus" required>
+                                    <option value="EM_ABERTO">Em Aberto</option>
+                                    <option value="RECURSO_EM_JULGAMENTO">Recurso em Julgamento</option>
+                                    <option value="RECURSO_DEFERIDO">Recurso Deferido</option>
+                                    <option value="RECURSO_INDEFERIDO">Recurso Indeferido</option>
+                                    <option value="ADVERTENCIA">Convertida em Advertência</option>
+                                    <option value="PAGO">Pago</option>
+                                    <option value="CANCELADO">Cancelado</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-grid form-grid-2 mb-3">
+                            <div class="form-group mb-0">
+                                <label class="form-label">Número Processo/SEI</label>
+                                <input type="text" class="form-control-custom" id="multaProcesso">
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label">Link do Processo</label>
+                                <input type="url" class="form-control-custom" id="multaLinkProcesso" placeholder="https://...">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control-custom" id="multaObservacoes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-primary-custom" onclick="salvarMulta()">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Novo Veículo -->
+    <div class="modal fade modal-custom" id="modalNovoVeiculo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalVeiculoTitle">Novo Veículo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formVeiculo">
+                        <input type="hidden" id="veiculoId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">Placa *</label>
+                            <input type="text" class="form-control-custom" id="veiculoPlaca" required style="text-transform: uppercase;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Modelo *</label>
+                            <input type="text" class="form-control-custom" id="veiculoModelo" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Secretaria *</label>
+                            <input type="text" class="form-control-custom" id="veiculoSecretaria" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Status</label>
+                            <select class="form-control-custom" id="veiculoAtivo">
+                                <option value="true">Ativo</option>
+                                <option value="false">Inativo</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-primary-custom" onclick="salvarVeiculo()">
+                        <i class="bi bi-check-lg"></i>
+                        Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Ver Multa -->
+    <div class="modal fade modal-custom" id="modalVerMulta" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes da Multa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalVerMultaBody">
+                    <!-- Conteúdo dinâmico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" onclick="verHistoricoMulta()">
+                        <i class="bi bi-clock-history"></i> Histórico
+                    </button>
+                    <button type="button" class="btn-secondary-custom" onclick="verAnexosMulta()">
+                        <i class="bi bi-paperclip"></i> Anexos
+                    </button>
+                    <button type="button" class="btn-primary-custom" onclick="editarMultaAtual()">
+                        <i class="bi bi-pencil"></i> Editar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Confirmação -->
+    <div class="modal fade modal-custom" id="modalConfirmacao" tabindex="-1">
+        <div class="modal-dialog modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmação</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalConfirmacaoBody">
+                    Tem certeza que deseja continuar?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-danger-custom btn-primary-custom" id="btnConfirmar">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Condutor -->
+    <div class="modal fade modal-custom" id="modalCondutor" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCondutorTitle">Novo Condutor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCondutor">
+                        <input type="hidden" id="condutorId">
+                        <div class="form-group">
+                            <label class="form-label">Nome Completo *</label>
+                            <input type="text" class="form-control-custom" id="condutorNome" required>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">CPF</label>
+                                <input type="text" class="form-control-custom" id="condutorCPF" maxlength="14">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Nº CNH</label>
+                                <input type="text" class="form-control-custom" id="condutorCNH">
+                            </div>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Categoria CNH</label>
+                                <select class="form-control-custom" id="condutorCategoria">
+                                    <option value="">Selecione</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="AB">AB</option>
+                                    <option value="C">C</option>
+                                    <option value="D">D</option>
+                                    <option value="E">E</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Validade CNH</label>
+                                <input type="date" class="form-control-custom" id="condutorValidadeCNH">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Secretaria</label>
+                            <input type="text" class="form-control-custom" id="condutorSecretaria" list="listSecretarias">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Telefone</label>
+                            <input type="tel" class="form-control-custom" id="condutorTelefone">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-primary-custom" onclick="salvarCondutor()">
+                        <i class="bi bi-check-lg"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Audiência -->
+    <div class="modal fade modal-custom" id="modalAudiencia" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAudienciaTitle">Nova Audiência</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAudiencia">
+                        <input type="hidden" id="audienciaId">
+                        <div class="form-group">
+                            <label class="form-label">Multa (AIT) *</label>
+                            <select class="form-control-custom" id="audienciaMulta" required>
+                                <option value="">Selecione a multa</option>
+                            </select>
+                        </div>
+                        <div class="form-grid form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Data *</label>
+                                <input type="date" class="form-control-custom" id="audienciaData" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Horário *</label>
+                                <input type="time" class="form-control-custom" id="audienciaHorario" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Órgão *</label>
+                            <select class="form-control-custom" id="audienciaOrgao" required>
+                                <option value="">Selecione</option>
+                                <option value="JARI">JARI</option>
+                                <option value="CETRAN">CETRAN</option>
+                                <option value="OUTRO">Outro</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Local</label>
+                            <input type="text" class="form-control-custom" id="audienciaLocal" placeholder="Endereço ou link">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Observações</label>
+                            <textarea class="form-control-custom" id="audienciaObs" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary-custom" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn-primary-custom" onclick="salvarAudiencia()">
+                        <i class="bi bi-check-lg"></i> Salvar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Histórico -->
+    <div class="modal fade modal-custom" id="modalHistorico" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-clock-history"></i> Histórico de Alterações</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="timeline" id="timelineHistorico" style="position:relative;padding-left:1.5rem;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal Anexos -->
+    <div class="modal fade modal-custom" id="modalAnexos" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-paperclip"></i> Anexos da Multa</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="upload-zone mb-3" id="uploadZoneAnexo" onclick="document.getElementById('anexoFile').click()" style="border:2px dashed var(--border-color);border-radius:12px;padding:1.5rem;text-align:center;cursor:pointer;">
+                        <input type="file" id="anexoFile" style="display:none" onchange="handleAnexoUpload(event)" accept=".pdf,.jpg,.jpeg,.png">
+                        <div style="font-size:1.5rem;color:var(--text-muted);"><i class="bi bi-plus-circle"></i></div>
+                        <div style="color:var(--text-secondary);font-size:0.85rem;">Adicionar anexo (PDF ou imagem)</div>
+                    </div>
+                    <div id="listaAnexos"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <datalist id="listSecretarias"></datalist>
+    <datalist id="listCondutores"></datalist>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
